@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+.env
+
+# SQLite
+*.db
+
+# Node
+node_modules/
+
+# Vue
+dist/
+
+# VS Code
+.vscode/
+
+# Redis
+dump.rdb
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
