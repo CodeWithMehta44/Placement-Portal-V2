@@ -1,5 +1,11 @@
 from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_jwt_extended import (
+    create_access_token,
+    jwt_required,
+    get_jwt,
+    get_jwt_identity
+)
 
 from database import db
 from models.user import User
@@ -75,12 +81,47 @@ def login():
             "error": "Invalid email or password"
     }), 401
 
+    access_token = create_access_token(
+    identity=str(user.id),
+    additional_claims={
+        "role": user.role,
+        "email": user.email
+    }
+)
+
     return jsonify({
-    "message": "Login Successful",
-    "user": {
+        "message": "Login Successful",
+        "access_token": access_token,
+        "user": {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "role": user.role
+        }
+    }), 200
+@auth_bp.route("/me", methods=["GET"])
+@jwt_required()
+def get_current_user():
+
+    user_id = get_jwt_identity()
+
+    user = User.query.get(user_id)
+
+    return jsonify({
         "id": user.id,
         "name": user.name,
         "email": user.email,
         "role": user.role
-    }
-}), 200
+    }), 200
+
+@auth_bp.route("/profile", methods=["GET"])
+@jwt_required()
+def profile():
+
+    claims = get_jwt()
+
+    return jsonify({
+        "message": "Protected Route",
+        "email": claims["email"],
+        "role": claims["role"]
+    }), 200

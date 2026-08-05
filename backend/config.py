@@ -11,3 +11,4 @@ class Config:
     )
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    JWT_SECRET_KEY = "placement-portal-super-secret-key-for-jwt-2026"

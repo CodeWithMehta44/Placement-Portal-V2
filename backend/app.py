@@ -1,6 +1,8 @@
 from flask import Flask
 from config import Config
+from flask_jwt_extended import JWTManager
 from database import db
+from flask_cors import CORS
 
 from models.user import User
 from models.company import Company
@@ -10,14 +12,19 @@ from models.application import Application
 from models.placement import Placement
 
 from routes.auth import auth_bp
+from routes.admin import admin_bp
 
 app = Flask(__name__)
+CORS(app)
 
 app.config.from_object(Config)
+
+jwt = JWTManager(app)
 
 db.init_app(app)
 
 app.register_blueprint(auth_bp)
+app.register_blueprint(admin_bp)
 
 @app.route("/")
 def home():
