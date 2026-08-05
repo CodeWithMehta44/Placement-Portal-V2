@@ -9,6 +9,7 @@ from flask_jwt_extended import (
 
 from database import db
 from models.user import User
+from models.student import Student
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -45,6 +46,14 @@ def register():
     )
 
     db.session.add(user)
+    db.session.commit()
+
+    student = Student(
+    user_id=user.id,
+    full_name=data["name"]
+)
+
+    db.session.add(student)
     db.session.commit()
 
     return jsonify({

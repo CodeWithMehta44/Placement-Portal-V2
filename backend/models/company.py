@@ -28,3 +28,5 @@ class Company(db.Model):
     backref="company",
     lazy=True
 )
+    is_approved = db.Column(db.Boolean, default=False)
+    is_active = db.Column(db.Boolean, default=True)

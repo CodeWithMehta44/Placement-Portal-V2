@@ -46,4 +46,5 @@ class Student(db.Model):
     backref="student",
     lazy=True
 )
+    is_active = db.Column(db.Boolean, default=True)
     
