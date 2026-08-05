@@ -1,9 +1,9 @@
 from .utils import admin_required
-from flask import Blueprint
-from flask import Blueprint, jsonify
-from flask_jwt_extended import jwt_required
+from flask import Blueprint, jsonify, request
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 
 from database import db
+from models.application import Application
 from models.student import Student
 from models.company import Company
 from models.job_position import JobPosition
@@ -25,7 +25,20 @@ def dashboard_stats():
 @admin_bp.route("/companies", methods=["GET"])
 @admin_required
 def get_companies():
-    companies = Company.query.all()
+
+    search = request.args.get("search")
+
+    query = Company.query
+
+    if search:
+        query = query.filter(
+            db.or_(
+                Company.company_name.ilike(f"%{search}%"),
+                Company.industry.ilike(f"%{search}%")
+            )
+        )
+
+    companies = query.all()
 
     company_list = []
 
@@ -45,7 +58,22 @@ def get_companies():
 @admin_required
 def get_students():
 
-    students = Student.query.all()
+    search = request.args.get("search")
+
+    query = Student.query
+
+    if search:
+        filters = [
+            Student.full_name.ilike(f"%{search}%"),
+            Student.phone.ilike(f"%{search}%")
+        ]
+
+        if search.isdigit():
+            filters.append(Student.id == int(search))
+
+        query = query.filter(db.or_(*filters))
+
+    students = query.all()
 
     student_list = []
 
@@ -62,6 +90,48 @@ def get_students():
         })
 
     return jsonify(student_list), 200
+
+@admin_bp.route("/jobs", methods=["GET"])
+@admin_required
+def get_jobs():
+
+    jobs = JobPosition.query.all()
+
+    job_list = []
+
+    for job in jobs:
+        job_list.append({
+            "id": job.id,
+            "company_id": job.company_id,
+            "title": job.title,
+            "salary": job.salary,
+            "location": job.location,
+            "vacancies": job.vacancies,
+            "deadline": str(job.deadline),
+            "created_at": str(job.created_at)
+        })
+
+    return jsonify(job_list), 200
+
+@admin_bp.route("/job/<int:job_id>", methods=["DELETE"])
+@admin_required
+def delete_job(job_id):
+
+    job = JobPosition.query.get(job_id)
+
+    if not job:
+        return jsonify({
+            "error": "Job not found"
+        }), 404
+
+    db.session.delete(job)
+    db.session.commit()
+
+    return jsonify({
+        "message": "Job deleted successfully"
+    }), 200
+
+
 
 @admin_bp.route("/student/<int:student_id>/deactivate", methods=["PUT"])
 @admin_required
@@ -123,3 +193,55 @@ def dashboard():
     return {
         "message": "Welcome Admin"
     }
+
+@admin_bp.route("/applications", methods=["GET"])
+@jwt_required()
+def get_all_applications():
+
+    claims = get_jwt()
+
+    if claims["role"] != "admin":
+        return jsonify({"error": "Unauthorized"}), 403
+
+    applications = Application.query.all()
+
+    data = []
+
+    for application in applications:
+
+        job = application.job_position
+        student = application.student
+        company = job.company
+
+        data.append({
+            "id": application.id,
+            "student": student.full_name,
+            "company": company.company_name,
+            "job_title": job.title,
+            "status": application.status,
+            "applied_date": application.applied_date
+        })
+
+    return jsonify(data), 200
+
+
+@admin_bp.route("/application/<int:id>", methods=["DELETE"])
+@jwt_required()
+def delete_application(id):
+
+    claims = get_jwt()
+
+    if claims["role"] != "admin":
+        return jsonify({"error": "Unauthorized"}), 403
+
+    application = Application.query.get(id)
+
+    if not application:
+        return jsonify({"error": "Application not found"}), 404
+
+    db.session.delete(application)
+    db.session.commit()
+
+    return jsonify({
+        "message": "Application deleted successfully"
+    }), 200

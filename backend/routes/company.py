@@ -1,7 +1,10 @@
 from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from datetime import datetime
 
 from database import db
+from models.job_position import JobPosition
 from models.user import User
 from models.company import Company
 
@@ -65,4 +68,61 @@ def register_company():
 
     return jsonify({
         "message": "Company registered successfully. Waiting for admin approval."
+    }), 201
+
+@company_bp.route("/job", methods=["POST"])
+@jwt_required()
+def create_job():
+
+    user_id = get_jwt_identity()
+
+    company = Company.query.filter_by(user_id=user_id).first()
+
+    if not company:
+        return jsonify({
+            "error": "Company not found"
+        }), 404
+
+    data = request.get_json()
+
+    if not data:
+        return jsonify({
+            "error": "No data provided"
+        }), 400
+
+    required_fields = [
+        "title",
+        "description",
+        "salary",
+        "location",
+        "skills_required",
+        "vacancies",
+        "deadline"
+    ]
+
+    for field in required_fields:
+        if field not in data or not data[field]:
+            return jsonify({
+                "error": f"{field} is required"
+            }), 400
+
+    job = JobPosition(
+        company_id=company.id,
+        title=data["title"],
+        description=data["description"],
+        salary=data["salary"],
+        location=data["location"],
+        skills_required=data["skills_required"],
+        vacancies=data["vacancies"],
+        deadline=datetime.strptime(
+            data["deadline"],
+            "%Y-%m-%d"
+        ).date()
+    )
+
+    db.session.add(job)
+    db.session.commit()
+
+    return jsonify({
+        "message": "Job created successfully"
     }), 201
