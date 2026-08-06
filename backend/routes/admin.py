@@ -151,6 +151,44 @@ def deactivate_student(student_id):
         "message": "Student deactivated successfully"
     }), 200
 
+@admin_bp.route("/student/<int:student_id>/activate", methods=["PUT"])
+@admin_required
+def activate_student(student_id):
+
+    student = Student.query.get(student_id)
+
+    if not student:
+        return jsonify({
+            "error": "Student not found"
+        }), 404
+
+    student.is_active = True
+    db.session.commit()
+
+    return jsonify({
+        "message": "Student activated successfully"
+    }), 200
+
+@admin_bp.route("/company/<int:company_id>/activate", methods=["PUT"])
+@admin_required
+def activate_company(company_id):
+
+    company = Company.query.get(company_id)
+
+    if not company:
+        return jsonify({
+            "error": "Company not found"
+        }), 404
+
+    company.is_active = True
+    db.session.commit()
+
+    return jsonify({
+        "message": "Company activated successfully"
+    }), 200
+
+
+
 @admin_bp.route("/company/<int:company_id>/deactivate", methods=["PUT"])
 @admin_required
 def deactivate_company(company_id):
