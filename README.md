@@ -126,6 +126,8 @@ Placement-Portal-V2
 - Logout
 - Dashboard Authentication
 
+- Milestone 3 - CompanyDashboard 
+
 **Status:** ✅ Completed
 
 ---
