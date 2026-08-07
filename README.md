@@ -126,7 +126,8 @@ Placement-Portal-V2
 - Logout
 - Dashboard Authentication
 
-- Milestone 3 - CompanyDashboard 
+- Milestone 3 - CompanyDashboard
+- Milestone 4 -StudentDashboard 
 
 **Status:** ✅ Completed
 
