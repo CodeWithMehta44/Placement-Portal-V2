@@ -5,8 +5,18 @@ import Register from "../views/Register.vue";
 import StudentDashboard from "../views/StudentDashboard.vue";
 import CompanyDashboard from "../views/CompanyDashboard.vue";
 import AdminDashboard from "../views/AdminDashboard.vue";
+import CompanyJobDetails from "../views/CompanyJobDetails.vue"
+import JobDetails from "../views/JobDetails.vue";
 
 const routes = [
+  {
+    path: "/student/job/:id",
+    component: JobDetails
+},
+  {
+    path: "/company/job/:id",
+    component: CompanyJobDetails
+},
   {
     path: "/",
     component: Login,
@@ -39,6 +49,7 @@ const routes = [
       role: "admin",
     },
   },
+  
 ];
 
 const router = createRouter({

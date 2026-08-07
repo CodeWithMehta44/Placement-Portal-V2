@@ -27,6 +27,8 @@ class JobPosition(db.Model):
 
     deadline = db.Column(db.Date)
 
+    is_active = db.Column(db.Boolean, default=True)
+
     created_at = db.Column(
         db.DateTime,
         default=datetime.utcnow
