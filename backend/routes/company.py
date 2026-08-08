@@ -3,12 +3,16 @@ from werkzeug.security import generate_password_hash
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
 
+import os
+from flask import send_from_directory
+
 from database import db
 from models.job_position import JobPosition
 from models.user import User
 from models.company import Company
 from models.application import Application
 from models.student import Student
+from models.notification import Notification
 
 company_bp = Blueprint("company", __name__)
 
@@ -267,6 +271,48 @@ def get_job_applications(job_id):
 
     return jsonify(application_list), 200
 
+@company_bp.route("/application/<int:application_id>/resume", methods=["GET"])
+@jwt_required()
+def view_application_resume(application_id):
+
+    user_id = get_jwt_identity()
+
+    company = Company.query.filter_by(user_id=user_id).first()
+
+    if not company:
+        return jsonify({"error": "Company not found"}), 404
+
+    application = Application.query.get(application_id)
+
+    if not application:
+        return jsonify({"error": "Application not found"}), 404
+
+    job = JobPosition.query.get(application.job_id)
+
+    if not job:
+        return jsonify({"error": "Job not found"}), 404
+
+    # Make sure this company owns the job
+    if job.company_id != company.id:
+        return jsonify({"error": "Unauthorized"}), 403
+
+    student = Student.query.get(application.student_id)
+
+    if not student or not student.resume:
+        return jsonify({"error": "Resume not found"}), 404
+
+    upload_folder = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)),
+        "uploads",
+        "resumes"
+    )
+
+    return send_from_directory(
+        upload_folder,
+        student.resume,
+        as_attachment=False
+    )
+
 @company_bp.route("/application/<int:application_id>", methods=["PUT"])
 @jwt_required()
 def update_application_status(application_id):
@@ -291,6 +337,36 @@ def update_application_status(application_id):
     data = request.get_json()
 
     application.status = data["status"]
+
+    status = application.status
+
+    if status == "Shortlisted":
+        title = "🎉 Application Shortlisted"
+        message = f"Congratulations! You have been shortlisted for {job.title}."
+
+    elif status == "Interview":
+        title = "📅 Interview Scheduled"
+        message = f"You have been invited for an interview for {job.title}."
+
+    elif status == "Selected":
+        title = "🥳 Congratulations!"
+        message = f"You have been selected for {job.title}."
+
+    elif status == "Rejected":
+        title = "Update"
+        message = f"Unfortunately, your application for {job.title} was not selected."
+
+    else:
+        title = "Application Updated"
+        message = f"Your application status has changed to {status}."
+
+    notification = Notification(
+        student_id=application.student_id,
+        title=title,
+        message=message
+    )
+
+    db.session.add(notification)
 
     db.session.commit()
 
@@ -396,28 +472,3 @@ def get_company_profile():
         "location": company.location,
         "description": company.description
     }), 200
-
-@company_bp.route("/profile", methods=["PUT"])
-@jwt_required()
-def update_company_profile():
-    user_id = get_jwt_identity()
-
-    company = Company.query.filter_by(user_id=user_id).first()
-
-    if not company:
-        return jsonify({"message": "Company not found"}), 404
-
-    user = User.query.get(user_id)
-    data = request.get_json()
-
-    company.company_name = data.get("company_name", company.company_name)
-    company.industry = data.get("industry", company.industry)
-    company.website = data.get("website", company.website)
-    company.location = data.get("location", company.location)
-    company.description = data.get("description", company.description)
-
-    user.email = data.get("email", user.email)
-
-    db.session.commit()
-
-    return jsonify({"message": "Profile updated successfully"}), 200

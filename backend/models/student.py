@@ -47,4 +47,10 @@ class Student(db.Model):
     lazy=True
 )
     is_active = db.Column(db.Boolean, default=True)
+
+    notifications = db.relationship(
+    "Notification",
+    backref="student",
+    lazy=True
+)
     

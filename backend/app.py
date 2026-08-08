@@ -15,6 +15,7 @@ from routes.auth import auth_bp
 from routes.admin import admin_bp
 from routes.company import company_bp
 from routes.student import student_bp
+from routes.notification import notification_bp
 
 app = Flask(__name__)
 CORS(app)
@@ -29,6 +30,7 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(admin_bp, url_prefix="/admin")
 app.register_blueprint(company_bp, url_prefix="/company")
 app.register_blueprint(student_bp, url_prefix="/student")
+app.register_blueprint(notification_bp)
 
 @app.route("/")
 def home():

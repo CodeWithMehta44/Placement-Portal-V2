@@ -8,8 +8,18 @@ import AdminDashboard from "../views/AdminDashboard.vue";
 import CompanyJobDetails from "../views/CompanyJobDetails.vue"
 import JobDetails from "../views/JobDetails.vue";
 import CompanyProfile from "../views/CompanyProfile.vue";
+import StudentProfile from "../views/StudentProfile.vue";
 
 const routes = [
+
+  {
+    path: "/student/profile",
+    component: StudentProfile,
+    meta:{
+        requiresAuth:true,
+        role:"student"
+    }
+},
   {
     path: "/company/profile",
     component: CompanyProfile

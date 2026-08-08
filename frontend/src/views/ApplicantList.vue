@@ -40,13 +40,17 @@
                 <td>{{ student.cgpa }}</td>
 
                 <td>
-                    <a
-                        :href="student.resume"
-                        target="_blank"
+                  <button
+                        v-if="student.resume"
                         class="resume-link"
+                        @click="viewResume(student.application_id)"
                     >
                         View Resume
-                    </a>
+                    </button>
+
+                    <span v-else>
+                        No Resume
+                    </span>
                 </td>
 
                 <td>
@@ -274,6 +278,26 @@ async function updateStatus(app, status) {
 
 }
 
+async function viewResume(applicationId) {
+    try {
+        const response = await api.get(
+            `/company/application/${applicationId}/resume`,
+            {
+                responseType: "blob"
+            }
+        )
+
+        const fileURL = URL.createObjectURL(response.data)
+
+        window.open(fileURL, "_blank")
+
+    } catch (error) {
+        alert(
+            error.response?.data?.error ||
+            "Unable to open resume"
+        )
+    }
+}
 
 onMounted(() => {
 

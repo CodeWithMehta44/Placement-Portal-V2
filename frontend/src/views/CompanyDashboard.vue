@@ -57,24 +57,24 @@
     @click="$router.push('/company/create-job')"
 >
     + Create New Job
-</button>
-        </div>
+        </button>
+                </div>
 
     <br><br>
     <table class="job-table">
 
       <h2 class="section-title">My Placement Drives</h2>
 
-<div class="job-list">
+    <div class="job-list">
 
-    <div
-        class="job-card"
-        v-for="job in jobs"
-        :key="job.id"
-        >
+        <div
+            class="job-card"
+            v-for="job in jobs"
+            :key="job.id"
+            >
 
-        <div class="job-info"> 
-            <div class="job-header">
+            <div class="job-info"> 
+                <div class="job-header">
                 <div>
 
                     <h3>{{ job.title }}</h3>

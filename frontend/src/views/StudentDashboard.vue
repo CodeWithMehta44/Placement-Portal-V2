@@ -2,19 +2,28 @@
   <div>
     <div class="dashboard-header">
     <div>
-        <h1>Welcome, Student </h1>
+        <h1>
+            Welcome,
+            {{ student?.full_name || student?.name || "Student" }}
+        </h1>
         <p>Manage your placement journey from one place.</p>
         
     </div>
 
     <div class="header-buttons">
-        <button class="profile-btn">
+        <button
+            class="profile-btn"
+            @click="router.push('/student/profile')"
+        >
             Profile
         </button>
 
-        <button class="logout-btn">
-            Logout
-        </button>
+        <button
+        class="logout-btn"
+        @click="logout"
+    >
+        Logout
+</button>
     </div>
 </div>
 
@@ -44,11 +53,18 @@
 </h1>
 
 <div
-  v-for="application in applications"
-  :key="'interview-' + application.id"
+    v-for="notification in notifications"
+    :key="notification.id"
+    class="interview-card"
 >
+    <h3>{{ notification.title }}</h3>
+
+    <p>{{ notification.message }}</p>
+
+    <small>{{ notification.created_at }}</small>
+
   <div
-    v-if="application.status === 'Interview'"
+    v-if="applications.status === 'Interview'"
     class="interview-card"
   >
     <h3>📢 Interview Scheduled</h3>
@@ -70,6 +86,15 @@
 </div>
 
 <h2 class="section-title">Available Jobs</h2>
+
+<div class="search-box">
+  <input
+    v-model="search"
+    @input="loadJobs"
+    type="text"
+    placeholder="Search by company, title, skills..."
+  />
+</div>
   <div class="job-list">
 
    <div
@@ -174,6 +199,9 @@ import { useRouter } from "vue-router";
 const jobs = ref([]);
 const applications = ref([]);
 const router = useRouter();
+const student = ref({})
+const notifications = ref([]);
+const search = ref("")
 
 function viewJob(id) {
 
@@ -197,28 +225,50 @@ async function loadApplications() {
 
 }
 
+async function loadNotifications() {
+  try {
+    const response = await api.get("/student/notifications");
+    notifications.value = response.data;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+async function loadStudent() {
+    try {
+        const res = await api.get("/student/profile")
+        student.value = res.data
+    } catch (err) {
+        console.log(err)
+    }
+}
+
+function logout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    localStorage.removeItem("user");
+
+    router.push("/");
+}
 
 async function loadJobs() {
-
     try {
-
-        const response = await api.get("/student/jobs");
+        const response = await api.get(
+            `/student/jobs?search=${search.value}`
+        );
 
         jobs.value = response.data;
-
     } catch (error) {
-
         console.log(error);
-
     }
-
 }
 
 onMounted(() => {
 
     loadJobs();
     loadApplications();
-
+    loadStudent();
+    loadNotifications();
 });
 </script>
 
@@ -283,45 +333,73 @@ div{
     color:#dc3545;
     font-weight:bold;
 }
-.dashboard-header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:30px;
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 28px;
+    margin-bottom: 25px;
+    background: linear-gradient(135deg, #ffffff, #f3faf7);
+    border-left: 5px solid #198754;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
-.dashboard-header h1{
-    margin:0;
-    font-size:40px;
+.dashboard-header h1 {
+    margin: 0 0 6px 0;
+    padding: 18px 28px;
+    margin-bottom: 25px;
+    font-size: 28px;
+    font-weight: 700;
+    color: #222;
 }
 
-.dashboard-header p{
-    color:#666;
-    margin-top:8px;
+.dashboard-header h1::first-letter {
+    color: #198754;
+    font-size: 26px;
+    margin-bottom: 4px;
 }
 
-.header-buttons{
-    display:flex;
-    gap:15px;
+.dashboard-header p {
+    margin: 0;
+    color: #777;
+    font-size: 14px;
+}
+
+.header-buttons {
+    display: flex;
+    gap: 10px;
 }
 
 .profile-btn,
-.logout-btn{
-    border:none;
-    padding:12px 20px;
-    border-radius:8px;
-    cursor:pointer;
-    font-weight:bold;
+.logout-btn {
+    padding: 9px 18px;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
 }
 
-.profile-btn{
-    background:#0d6efd;
-    color:white;
+.profile-btn {
+    background: #0d6efd;
+    color: white;
 }
 
-.logout-btn{
-    background:#dc3545;
-    color:white;
+.profile-btn:hover {
+    background: #0b5ed7;
+    transform: translateY(-1px);
+}
+
+.logout-btn {
+    background: #dc3545;
+    color: white;
+}
+
+.logout-btn:hover {
+    background: #bb2d3b;
+    transform: translateY(-1px);
 }
 
 .section-title{
@@ -450,6 +528,32 @@ div{
 .notification-title{
     margin-top:40px;
     margin-bottom:15px;
+}
+
+.search-box {
+    margin: 20px 0;
+    width: 50%;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    background: #fff;
+}
+
+.search-box input::placeholder {
+    color: #999;
+}
+
+.search-box input:focus {
+    border-color: #198754;
+    box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.12);
 }
 
 </style>
