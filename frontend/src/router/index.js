@@ -7,8 +7,21 @@ import CompanyDashboard from "../views/CompanyDashboard.vue";
 import AdminDashboard from "../views/AdminDashboard.vue";
 import CompanyJobDetails from "../views/CompanyJobDetails.vue"
 import JobDetails from "../views/JobDetails.vue";
+import CompanyProfile from "../views/CompanyProfile.vue";
 
 const routes = [
+  {
+    path: "/company/profile",
+    component: CompanyProfile
+},
+  {
+    path: "/company/job/:id/applications",
+    component: () => import("../views/ApplicantList.vue")
+},
+  {
+    path: "/company/create-job",
+    component: () => import("../views/CreateJob.vue")
+},
   {
     path: "/student/job/:id",
     component: JobDetails

@@ -24,6 +24,10 @@ class Application(db.Model):
         default="Applied"
     )
 
+    interview_date = db.Column(db.Date)
+    interview_time = db.Column(db.Time)
+    interview_location = db.Column(db.String(200))
+
     applied_date = db.Column(
         db.DateTime,
         default=datetime.utcnow

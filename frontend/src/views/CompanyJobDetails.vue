@@ -26,65 +26,54 @@
     <br><br>
 
     <h2>Applicants</h2>
+    
 
     <table class="company-table">
 
-        <thead>
+      <thead>
+        <tr>
+            <th>Name</th>
+            <th>CGPA</th>
+            <th>Resume</th>
+            <th>Status</th>
+                </tr>
+    </thead>
 
-            <tr>
+       <tbody>
 
-                <th>Name</th>
+    <tr v-if="applications.length === 0">
+        <td colspan="5">
+            No applications yet.
+        </td>
+    </tr>
 
-                <th>CGPA</th>
+    <tr
+        v-for="app in applications"
+        :key="app.application_id"
+    >
 
-                <th>Status</th>
+        <td>{{ app.student_name }}</td>
 
-                <th>Action</th>
+        <td>{{ app.cgpa }}</td>
 
-            </tr>
-
-        </thead>
-
-        <tbody>
-
-            <tr v-if="applications.length === 0">
-
-                <td colspan="4">
-                    No applications yet.
-                </td>
-
-            </tr>
-
-            <tr
-                v-for="application in applications"
-                :key="application.application_id"
+        <td>
+            <a
+                v-if="app.resume"
+                :href="app.resume"
+                target="_blank"
             >
+                View Resume
+            </a>
 
-                <td>{{ application.student_name }}</td>
+            <span v-else>
+                No Resume
+            </span>
+        </td>
 
-                <td>{{ application.cgpa }}</td>
+        <td>{{ app.status }}</td>
+    </tr>
 
-                <td>{{ application.status }}</td>
-
-                <td>
-
-                    <a
-                        :href="application.resume_url"
-                        target="_blank"
-                        v-if="application.resume_url"
-                    >
-                        Resume
-                    </a>
-
-                    <span v-else>
-                        No Resume
-                    </span>
-
-                </td>
-
-            </tr>
-
-        </tbody>
+</tbody>
 
     </table>
 
@@ -124,7 +113,7 @@ async function loadApplications() {
         const response = await api.get(
             `/company/job/${route.params.id}/applications`
         );
-
+        console.log(response.data)
         applications.value = response.data;
 
     } catch (error) {
@@ -178,5 +167,4 @@ onMounted(() => {
     border-bottom:1px solid #ddd;
 
 }
-
 </style>

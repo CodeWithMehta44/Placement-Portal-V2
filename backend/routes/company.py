@@ -261,8 +261,163 @@ def get_job_applications(job_id):
 
             "status": application.status,
 
-            "resume_url": student.resume_url
+            "resume": student.resume
 
         })
 
     return jsonify(application_list), 200
+
+@company_bp.route("/application/<int:application_id>", methods=["PUT"])
+@jwt_required()
+def update_application_status(application_id):
+
+    user_id = get_jwt_identity()
+
+    company = Company.query.filter_by(user_id=user_id).first()
+
+    if not company:
+        return jsonify({"error": "Company not found"}), 404
+
+    application = Application.query.get(application_id)
+
+    if not application:
+        return jsonify({"error": "Application not found"}), 404
+
+    job = JobPosition.query.get(application.job_id)
+
+    if job.company_id != company.id:
+        return jsonify({"error": "Unauthorized"}), 403
+
+    data = request.get_json()
+
+    application.status = data["status"]
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Application updated successfully"
+    }), 200
+
+@company_bp.route("/job/<int:job_id>/status", methods=["PUT"])
+@jwt_required()
+def update_job_status(job_id):
+
+    user_id = get_jwt_identity()
+
+    company = Company.query.filter_by(user_id=user_id).first()
+
+    if not company:
+        return jsonify({"error": "Company not found"}), 404
+
+    job = JobPosition.query.filter_by(
+        id=job_id,
+        company_id=company.id
+    ).first()
+
+    if not job:
+        return jsonify({"error": "Job not found"}), 404
+
+    data = request.get_json()
+
+    if "is_active" not in data:
+        return jsonify({"error": "is_active is required"}), 400
+
+    job.is_active = data["is_active"]
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Job status updated successfully"
+    }), 200
+
+@company_bp.route("/application/<int:application_id>/interview", methods=["PUT"])
+@jwt_required()
+def schedule_interview(application_id):
+
+    user_id = get_jwt_identity()
+
+    company = Company.query.filter_by(user_id=user_id).first()
+
+    if not company:
+        return jsonify({"error": "Company not found"}), 404
+
+    application = Application.query.get(application_id)
+
+    if not application:
+        return jsonify({"error": "Application not found"}), 404
+
+    job = JobPosition.query.get(application.job_id)
+
+    if job.company_id != company.id:
+        return jsonify({"error": "Unauthorized"}), 403
+
+    data = request.get_json()
+
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    application.interview_date = datetime.strptime(
+        data["interview_date"],
+        "%Y-%m-%d"
+    ).date()
+
+    application.interview_time = datetime.strptime(
+        data["interview_time"],
+        "%H:%M"
+    ).time()
+
+    application.interview_location = data["interview_location"]
+
+    application.status = "Interview"
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Interview scheduled successfully"
+    }), 200
+
+@company_bp.route("/profile", methods=["GET"])
+@jwt_required()
+def get_company_profile():
+    user_id = get_jwt_identity()
+
+    company = Company.query.filter_by(user_id=user_id).first()
+
+    if not company:
+        return jsonify({"message": "Company not found"}), 404
+
+    user = User.query.get(user_id)
+
+    return jsonify({
+        "company_name": company.company_name,
+        "email": user.email,
+        "industry": company.industry,
+        "website": company.website,
+        "location": company.location,
+        "description": company.description
+    }), 200
+
+@company_bp.route("/profile", methods=["PUT"])
+@jwt_required()
+def update_company_profile():
+    user_id = get_jwt_identity()
+
+    company = Company.query.filter_by(user_id=user_id).first()
+
+    if not company:
+        return jsonify({"message": "Company not found"}), 404
+
+    user = User.query.get(user_id)
+    data = request.get_json()
+
+    company.company_name = data.get("company_name", company.company_name)
+    company.industry = data.get("industry", company.industry)
+    company.website = data.get("website", company.website)
+    company.location = data.get("location", company.location)
+    company.description = data.get("description", company.description)
+
+    user.email = data.get("email", user.email)
+
+    db.session.commit()
+
+    return jsonify({"message": "Profile updated successfully"}), 200

@@ -5,6 +5,7 @@
     <h3 v-if="user">
         Welcome {{ user.name }} </h3>
 
+        <button @click="logout">Logout</button>
     <br><br>
 
     <div class="stats">
@@ -204,7 +205,7 @@
 </table>
 
     <br>
-    <button @click="logout">Logout</button>
+    
 </div>
 </template>
 

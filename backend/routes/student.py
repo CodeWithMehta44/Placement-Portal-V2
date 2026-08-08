@@ -158,10 +158,15 @@ def get_my_applications():
 
         application_list.append({
             "id": application.id,
+            "job_id": job.id,
             "company": company.company_name,
             "title": job.title,
             "status": application.status,
-            "applied_date": str(application.applied_date)
+            "applied_date": str(application.applied_date),
+
+            "interview_date": str(application.interview_date) if application.interview_date else None,
+            "interview_time": str(application.interview_time) if application.interview_time else None,
+            "interview_location": application.interview_location
         })
 
     return jsonify(application_list), 200
