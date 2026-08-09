@@ -25,3 +25,6 @@ dump.rdb
 # OS
 .DS_Store
 Thumbs.db
+
+# Celery
+celerybeat-schedule*
