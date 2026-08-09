@@ -1,0 +1,8 @@
+Application ID,Student ID,Company ID,Status,Interview Date,Interview Time,Interview Location,Applied Date
+1,1,2,Rejected,,,,2026-08-08 07:53:21.384141
+2,1,1,Selected,2026-09-10,20:20:00,Bangalore,2026-08-08 07:57:10.572229
+3,2,2,Selected,2026-10-29,10:10:00,Mumbai,2026-08-08 08:11:17.154648
+4,2,1,Rejected,,,,2026-08-08 08:11:23.732111
+5,1,1,Selected,2026-08-14,10:10:00,Bangalore,2026-08-08 11:00:51.196957
+6,2,1,Rejected,2819-03-08,18:59:00,New york,2026-08-08 14:42:40.966833
+7,2,1,Interview,2026-08-10,10:10:00,Test Interview Location,2026-08-08 14:42:46.505995

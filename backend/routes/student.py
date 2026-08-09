@@ -1,5 +1,7 @@
 from flask import Blueprint,request,jsonify,send_from_directory
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from tasks import export_applications_csv_task
+from celery_app import celery
 
 import os
 from werkzeug.utils import secure_filename
@@ -302,4 +304,43 @@ def upload_resume():
     return jsonify({
         "message": "Resume uploaded successfully",
         "resume": filename
+    }), 200
+
+@student_bp.route("/export-applications", methods=["POST"])
+@jwt_required()
+def export_applications():
+    task = export_applications_csv_task.delay()
+
+    return jsonify({
+        "message": "Application export started",
+        "task_id": task.id
+    }), 202
+
+@student_bp.route("/export-applications/status/<task_id>", methods=["GET"])
+@jwt_required()
+def export_applications_status(task_id):
+    task = celery.AsyncResult(task_id)
+
+    if task.state == "PENDING":
+        return jsonify({
+            "status": "PENDING",
+            "message": "Export is waiting to be processed"
+        }), 200
+
+    if task.state == "SUCCESS":
+        return jsonify({
+            "status": "SUCCESS",
+            "message": "Application export completed",
+            "result": task.result
+        }), 200
+
+    if task.state == "FAILURE":
+        return jsonify({
+            "status": "FAILURE",
+            "message": "Application export failed"
+        }), 500
+
+    return jsonify({
+        "status": task.state,
+        "message": "Export is being processed"
     }), 200

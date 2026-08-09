@@ -2,6 +2,9 @@ from .utils import admin_required
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 
+import os
+from flask import send_file
+
 from database import db
 from models.application import Application
 from models.student import Student
@@ -283,3 +286,37 @@ def delete_application(id):
     return jsonify({
         "message": "Application deleted successfully"
     }), 200
+
+@admin_bp.route("/reports/monthly", methods=["GET"])
+@admin_required
+def view_monthly_report():
+    reports_dir = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)),
+        "reports"
+    )
+
+    if not os.path.exists(reports_dir):
+        return jsonify({
+            "error": "No reports available"
+        }), 404
+
+    reports = [
+        file for file in os.listdir(reports_dir)
+        if file.startswith("placement_report_") and file.endswith(".html")
+    ]
+
+    if not reports:
+        return jsonify({
+            "error": "No monthly report available"
+        }), 404
+
+    latest_report = max(
+        reports,
+        key=lambda file: os.path.getmtime(
+            os.path.join(reports_dir, file)
+        )
+    )
+
+    return send_file(
+        os.path.join(reports_dir, latest_report)
+    )

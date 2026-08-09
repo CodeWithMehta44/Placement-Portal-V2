@@ -1,12 +1,41 @@
 <template>
-  <div style="padding:40px">
-    <h1>Admin Dashboard</h1>
+  <<div class="admin-page">
 
-    <h3 v-if="user">
-        Welcome {{ user.name }} </h3>
+    <!-- Header -->
+    <div class="dashboard-header">
 
-        <button @click="logout">Logout</button>
-    <br><br>
+        <div>
+            <h1>Admin Dashboard</h1>
+
+            <p v-if="user" class="welcome-text">
+                Welcome back, <strong>{{ user.name }}</strong> 
+            </p>
+
+            <p class="subtitle">
+                Manage students, companies, jobs and placement activities.
+            </p>
+        </div>
+
+        <div class="header-actions">
+
+            <button
+                class="report-btn"
+                @click="viewMonthlyReport"
+            >
+                📊 View Monthly Placement Report
+            </button>
+
+            <button
+                class="logout-btn"
+                @click="logout"
+            >
+                Logout
+            </button>
+
+        </div>
+
+    </div>
+
 
     <div class="stats">
 
@@ -360,9 +389,126 @@ function logout() {
     localStorage.removeItem("role");
     router.push("/");
 }
+
+async function viewMonthlyReport() {
+    try {
+        const token = localStorage.getItem("token");
+
+        const response = await fetch(
+            "http://localhost:5000/admin/reports/monthly",
+            {
+                headers: {
+                    Authorization: "Bearer " + token
+                }
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error("Failed to fetch monthly report");
+        }
+
+        const html = await response.text();
+
+        const reportWindow = window.open("", "_blank");
+
+        reportWindow.document.write(html);
+        reportWindow.document.close();
+
+    } catch (error) {
+        console.error("Report error:", error);
+        alert("Unable to open monthly placement report");
+    }
+}
 </script>
 
 <style scoped>
+
+.admin-page {
+    padding: 40px;
+    background: #f7f8fc;
+    min-height: 100vh;
+}
+
+
+/* Header */
+
+.dashboard-header {
+    background: white;
+    padding: 28px 32px;
+    border-radius: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 30px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e8eaf0;
+    margin-bottom: 30px;
+}
+
+.dashboard-header h1 {
+    margin: 0;
+    font-size: 30px;
+    color: #1f2937;
+}
+
+.welcome-text {
+    margin: 8px 0 4px;
+    font-size: 17px;
+    color: #374151;
+}
+
+.welcome-text strong {
+    color: #007bff;
+}
+
+.subtitle {
+    margin: 0;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+
+/* Right side buttons */
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.report-btn {
+    padding: 11px 17px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.report-btn:hover {
+    background: #0056b3;
+    transform: translateY(-1px);
+}
+
+.logout-btn {
+    padding: 11px 17px;
+    background: #f1f3f5;
+    color: #374151;
+    border: 1px solid #d9dde3;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.logout-btn:hover {
+    background: #e5e7eb;
+}
 
 .stats{
     display:grid;
@@ -484,4 +630,34 @@ button:hover{
     background:#157347;
 }
 
+button {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 6px;
+    background: #007bff;
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+@media (max-width: 800px) {
+
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .header-actions {
+        width: 100%;
+    }
+
+    .report-btn,
+    .logout-btn {
+        flex: 1;
+    }
+
+}
 </style>

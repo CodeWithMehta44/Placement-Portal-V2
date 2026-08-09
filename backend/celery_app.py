@@ -1,6 +1,10 @@
+import sys
+import os
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from celery import Celery
 from celery.schedules import crontab
-from app import app
 
 
 celery = Celery(
@@ -25,6 +29,8 @@ celery.conf.update(
 
 class FlaskTask(celery.Task):
     def __call__(self, *args, **kwargs):
+        from app import app
+
         with app.app_context():
             return self.run(*args, **kwargs)
 
