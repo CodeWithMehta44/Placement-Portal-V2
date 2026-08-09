@@ -58,8 +58,8 @@
             <h2>{{ stats.applications }}</h2>
             <p>Total Applications</p>
         </div>
-        <p>Total Jobs Loaded: {{ jobs.length }}</p>
-        <p>Total Applications Loaded: {{ applications.length }}</p>
+        <!-- <p>Total Jobs Loaded: {{ jobs.length }}</p>
+        <p>Total Applications Loaded: {{ applications.length }}</p> -->
 
     </div>
 
