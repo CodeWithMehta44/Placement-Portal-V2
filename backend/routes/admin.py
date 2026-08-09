@@ -1,6 +1,8 @@
 from .utils import admin_required
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
+from cache import cache
+import json
 
 import os
 from flask import send_file
@@ -61,7 +63,19 @@ def get_companies():
 @admin_required
 def get_students():
 
-    search = request.args.get("search")
+    search = request.args.get("search", "").strip()
+
+    # Redis cache key
+    cache_key = f"students:{search.lower()}"
+
+    # Check Redis cache
+    cached_data = cache.get(cache_key)
+
+    if cached_data:
+        print("STUDENT CACHE HIT")
+        return jsonify(json.loads(cached_data)), 200
+
+    print("STUDENT CACHE MISS")
 
     query = Student.query
 
@@ -92,8 +106,16 @@ def get_students():
             "is_active": student.is_active
         })
 
-    return jsonify(student_list), 200
+    # Store result in Redis for 60 seconds
+    cache.set(
+        cache_key,
+        json.dumps(student_list),
+        ex=60
+    )
 
+    print("STUDENT CACHE STORED")
+
+    return jsonify(student_list), 200
 @admin_bp.route("/jobs", methods=["GET"])
 @admin_required
 def get_jobs():

@@ -2,6 +2,9 @@ from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
+import json
+from cache import cache
+from cache import clear_job_cache
 
 import os
 from flask import send_from_directory
@@ -128,6 +131,8 @@ def create_job():
 
     db.session.add(job)
     db.session.commit()
+
+    clear_job_cache()
 
     return jsonify({
         "message": "Job created successfully"
@@ -472,3 +477,49 @@ def get_company_profile():
         "location": company.location,
         "description": company.description
     }), 200
+
+@company_bp.route("/search", methods=["GET"])
+@jwt_required()
+def search_companies():
+
+    search = request.args.get("search", "").strip()
+
+    cache_key = f"companies:{search.lower()}"
+
+    # Check Redis cache
+    cached_data = cache.get(cache_key)
+
+    if cached_data:
+        print("COMPANY CACHE HIT")
+        return jsonify(json.loads(cached_data)), 200
+
+    print("COMPANY CACHE MISS")
+
+    # Search companies from database
+    query = Company.query
+
+    if search:
+        query = query.filter(
+            Company.company_name.ilike(f"%{search}%")
+        )
+
+    companies = query.all()
+
+    company_list = []
+
+    for company in companies:
+        company_list.append({
+            "id": company.id,
+            "company_name": company.company_name
+        })
+
+    # Store result in Redis for 60 seconds
+    cache.set(
+        cache_key,
+        json.dumps(company_list),
+        ex=60
+    )
+
+    print("COMPANY CACHE STORED")
+
+    return jsonify(company_list), 200

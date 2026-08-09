@@ -2,6 +2,8 @@ from flask import Blueprint,request,jsonify,send_from_directory
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from tasks import export_applications_csv_task
 from celery_app import celery
+from cache import cache
+import json
 
 import os
 from werkzeug.utils import secure_filename
@@ -26,9 +28,19 @@ def get_available_jobs():
 
     search = request.args.get("search", "").strip()
 
+    cache_key = f"jobs:{search.lower()}"
+
+    cached_data = cache.get(cache_key)
+
+    if cached_data:
+        print("CACHE HIT")
+        return jsonify(json.loads(cached_data)), 200
+
+    print("CACHE MISS")
+
     query = db.session.query(JobPosition, Company).join(
-    Company,
-    JobPosition.company_id == Company.id
+        Company,
+        JobPosition.company_id == Company.id
     ).filter(
         Company.is_approved == True,
         Company.is_active == True,
@@ -59,6 +71,14 @@ def get_available_jobs():
             "location": job.location,
             "deadline": str(job.deadline)
         })
+
+    cache.set(
+        cache_key,
+        json.dumps(job_list),
+        ex=60
+    )
+
+    print("CACHE STORED")
 
     return jsonify(job_list), 200
 
